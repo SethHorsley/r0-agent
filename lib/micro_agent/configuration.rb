@@ -6,22 +6,45 @@ module MicroAgent
     CONFIG_PATH = File.expand_path("~/.config/micro-agent.yml")
     PROVIDERS = ["anthropic", "open_ai"]
 
+    DEFAULT_CONFIG = {
+      "providers" => {
+        "anthropic" => {"api_key" => ""},
+        "open_ai" => {"api_key" => ""}
+      },
+      "large_provider" => {
+        "provider" => "open_ai",
+        "model" => "gpt-4"
+      },
+      "small_provider" => {
+        "provider" => "open_ai",
+        "model" => "gpt-3.5-turbo"
+      }
+    }
+
     def self.load_or_create
       new.load_or_create
     end
 
     def load_or_create
       if File.exist?(CONFIG_PATH)
-        load_config
+        config = load_config
+        # Merge with default config to ensure all keys exist
+        DEFAULT_CONFIG.merge(config)
       else
         setup_config
       end
     end
 
+    def reconfigure
+      config = setup_config
+      MicroAgent.instance_variable_set(:@config, config)
+      config
+    end
+
     private
 
     def load_config
-      YAML.load_file(CONFIG_PATH)
+      YAML.load_file(CONFIG_PATH) || DEFAULT_CONFIG
     rescue => e
       puts "Error loading config: #{e.message}"
       setup_config
@@ -47,12 +70,25 @@ module MicroAgent
 
       PROVIDERS.each do |provider|
         puts "\nSetup for #{provider}:"
-        print "Enter your #{provider} API key (press Enter to skip): "
+        puts "Please enter your #{provider} API key"
+        puts "(Get your key from: #{get_provider_url(provider)})"
+        print "> "
         api_key = gets.chomp.strip
-        providers[provider] = {"api_key" => api_key} unless api_key.empty?
+        providers[provider] = {"api_key" => api_key}
       end
 
       providers
+    end
+
+    def get_provider_url(provider)
+      case provider
+      when "anthropic"
+        "https://console.anthropic.com/account/keys"
+      when "open_ai"
+        "https://platform.openai.com/api-keys"
+      else
+        "provider website"
+      end
     end
 
     def setup_large_provider
@@ -87,9 +123,7 @@ module MicroAgent
     end
 
     def save_config(config)
-      # Create ~/.config directory if it doesn't exist
       FileUtils.mkdir_p(File.dirname(CONFIG_PATH))
-
       File.write(CONFIG_PATH, config.to_yaml)
       puts "\nConfiguration saved to #{CONFIG_PATH}"
     end
