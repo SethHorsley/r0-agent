@@ -1,0 +1,30 @@
+PATH
+  remote: .
+  specs:
+    micro-agent (0.1.0)
+      openai
+      readline
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    io-console (0.7.2)
+    minitest (5.25.2)
+    openai (0.3.0)
+    rake (13.2.1)
+    readline (0.0.4)
+      reline
+    reline (0.5.11)
+      io-console (~> 0.5)
+
+PLATFORMS
+  arm64-darwin-24
+  ruby
+
+DEPENDENCIES
+  micro-agent!
+  minitest (~> 5.16)
+  rake (~> 13.0)
+
+BUNDLED WITH
+   2.5.22
