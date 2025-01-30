@@ -1,3 +1,4 @@
+# File: ./lib/micro_agent/cli.rb
 require "reline"
 require_relative "planner"
 require_relative "cli/command_handler"
@@ -30,12 +31,10 @@ module MicroAgent
 
         while @running
           begin
-            input = Reline.readmultiline("micro-agent> ") do |line|
-              # Return true if the input is complete
-              line.strip.empty? || line.strip.end_with?("\\")
-            end
+            # Use Reline.readline instead of readmultiline for simpler input handling
+            input = Reline.readline("micro-agent> ", true)
 
-            if input.nil?  # Handles Ctrl+D
+            if input.nil?  # Properly catches Ctrl+D
               stop
               break
             end
@@ -45,7 +44,7 @@ module MicroAgent
             @command_handler.handle_input(input)
           rescue Interrupt  # Handles Ctrl+C
             print "\r"  # Clear the current line
-            next  # Continue to next iteration
+            next
           rescue => e
             puts "\nError: #{e.message}"
             puts e.backtrace if ENV["DEBUG"]

@@ -18,6 +18,10 @@ module MicroAgent
       "small_provider" => {
         "provider" => "open_ai",
         "model" => "gpt-3.5-turbo"
+      },
+      "generation_strategy" => {
+        "mode" => "single",  # can be "single" or "test_driven"
+        "generate_tests" => false  # whether to generate tests in single mode
       }
     }
 
@@ -58,7 +62,8 @@ module MicroAgent
       config = {
         "providers" => setup_providers,
         "large_provider" => setup_large_provider,
-        "small_provider" => setup_small_provider
+        "small_provider" => setup_small_provider,
+        "generation_strategy" => setup_generation_strategy
       }
 
       save_config(config)
@@ -126,6 +131,34 @@ module MicroAgent
       FileUtils.mkdir_p(File.dirname(CONFIG_PATH))
       File.write(CONFIG_PATH, config.to_yaml)
       puts "\nConfiguration saved to #{CONFIG_PATH}"
+    end
+
+    def setup_generation_strategy
+      puts "\nCode Generation Strategy Configuration:"
+      puts "1. Single model (faster, no tests by default)"
+      puts "2. Test-driven (uses two models, generates tests first)"
+      print "Select strategy (1/2): "
+
+      case gets.chomp.strip
+      when "1"
+        puts "\nGenerate tests in single model mode? (y/n)"
+        generate_tests = gets.chomp.downcase.start_with?("y")
+        {
+          "mode" => "single",
+          "generate_tests" => generate_tests
+        }
+      when "2"
+        {
+          "mode" => "test_driven",
+          "generate_tests" => true
+        }
+      else
+        puts "Invalid choice. Defaulting to single model mode without tests."
+        {
+          "mode" => "single",
+          "generate_tests" => false
+        }
+      end
     end
   end
 end
