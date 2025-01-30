@@ -2,20 +2,56 @@ PATH
   remote: .
   specs:
     micro-agent (0.1.0)
-      openai
+      anthropic
+      langchainrb (~> 0.19.3)
       readline
 
 GEM
   remote: https://rubygems.org/
   specs:
+    addressable (2.8.7)
+      public_suffix (>= 2.0.2, < 7.0)
+    anthropic (0.3.2)
+      event_stream_parser (>= 0.3.0, < 2.0.0)
+      faraday (>= 1)
+      faraday-multipart (>= 1)
+    baran (0.1.12)
+    csv (3.3.2)
+    event_stream_parser (1.0.0)
+    faraday (2.12.2)
+      faraday-net_http (>= 2.0, < 3.5)
+      json
+      logger
+    faraday-multipart (1.1.0)
+      multipart-post (~> 2.0)
+    faraday-net_http (3.4.0)
+      net-http (>= 0.5.0)
     io-console (0.7.2)
+    json (2.9.1)
+    json-schema (4.3.1)
+      addressable (>= 2.8)
+    langchainrb (0.19.3)
+      baran (~> 0.1.9)
+      csv
+      json-schema (~> 4)
+      matrix
+      pragmatic_segmenter (~> 0.3.0)
+      zeitwerk (~> 2.5)
+    logger (1.6.5)
+    matrix (0.4.2)
     minitest (5.25.2)
-    openai (0.3.0)
+    multipart-post (2.4.1)
+    net-http (0.6.0)
+      uri
+    pragmatic_segmenter (0.3.24)
+    public_suffix (6.0.1)
     rake (13.2.1)
     readline (0.0.4)
       reline
     reline (0.5.11)
       io-console (~> 0.5)
+    uri (1.0.2)
+    zeitwerk (2.7.1)
 
 PLATFORMS
   arm64-darwin-24

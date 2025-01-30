@@ -23,7 +23,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "readline"
-  spec.add_dependency "openai"  # or whatever LLM client you want to use
+  spec.add_dependency "langchainrb", "~> 0.19.3"
+  spec.add_dependency "anthropic"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
 

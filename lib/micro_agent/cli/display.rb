@@ -1,4 +1,3 @@
-# File: ./lib/micro_agent/cli/display.rb
 module MicroAgent
   module CLI
     class Display
@@ -14,20 +13,12 @@ module MicroAgent
         end
 
         def show_help
-          puts <<~HELP
-            Available commands:
-            - help : Show this help message
-            - exit : Exit the application
-            - config : Reconfigure settings
-            - create : Start a new creation workflow
-            
-            During creation:
-            - You can describe your task
-            - Review and edit the generated plan
-            - Tests will be created and run automatically
-            
-            Press Ctrl+C to exit at any time
-          HELP
+          puts "\nAvailable commands:"
+          CommandHandler::COMMANDS.each do |cmd, desc|
+            puts "  #{cmd.ljust(15)} : #{desc}"
+          end
+          puts "\nAny other input will be sent to the AI model as a prompt."
+          puts "Press Ctrl+D to exit or Ctrl+C to clear current input.\n\n"
         end
 
         def show_plan(plan)

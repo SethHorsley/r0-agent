@@ -97,5 +97,10 @@ module MicroAgent
     def generate_test_prompt
       "Include tests in the same file using Minitest."
     end
+
+    def get_response(prompt)
+      # Use the large model for general prompts
+      @large_model.complete(prompt)
+    end
   end
 end

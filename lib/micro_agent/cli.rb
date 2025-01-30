@@ -1,4 +1,3 @@
-# File: ./lib/micro_agent/cli.rb
 require "reline"
 require_relative "planner"
 require_relative "cli/command_handler"
@@ -6,6 +5,8 @@ require_relative "cli/creation_workflow"
 require_relative "cli/plan_editor"
 require_relative "cli/display"
 require_relative "cli/test_runner"
+require "langchain"
+require "anthropic"  # Add this line
 
 module MicroAgent
   module CLI
@@ -28,13 +29,14 @@ module MicroAgent
         end
 
         Display.welcome_message(@config)
+        puts "Type your prompt or '/help' for available commands."
+        puts "Press Ctrl+D to exit or Ctrl+C to clear current input."
 
         while @running
           begin
-            # Use Reline.readline instead of readmultiline for simpler input handling
-            input = Reline.readline("micro-agent> ", true)
+            input = Reline.readline("prompt> ", true)
 
-            if input.nil?  # Properly catches Ctrl+D
+            if input.nil?  # Handles Ctrl+D
               stop
               break
             end
@@ -54,14 +56,13 @@ module MicroAgent
 
       def stop
         @running = false
-        puts  # Add a newline for clean exit
+        puts  # Add newline for clean exit
         Display.goodbye_message
       end
 
       private
 
       def setup_components
-        @planner = MicroAgent::Planner.new(@config)
         @command_handler = CommandHandler.new(self)
       end
 
