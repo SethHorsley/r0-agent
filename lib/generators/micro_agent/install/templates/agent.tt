@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'micro_agent'
+
+# Ensure we're in a Rails environment
+ENV['RAILS_ENV'] ||= 'development'
+require File.expand_path('../config/environment', __dir__)
+
+MicroAgent::CLI.start
+
