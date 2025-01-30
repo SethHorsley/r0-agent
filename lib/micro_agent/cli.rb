@@ -1,6 +1,5 @@
-# File: ./lib/micro_agent/cli.rb
-require "readline"
-require_relative "planner"  # Add this line
+require "reline"
+require_relative "planner"
 require_relative "cli/command_handler"
 require_relative "cli/creation_workflow"
 require_relative "cli/plan_editor"
@@ -10,27 +9,43 @@ require_relative "cli/test_runner"
 module MicroAgent
   module CLI
     class Runner
-      def self.start
-        new.start
+      def self.start(options = {})
+        new.start(options)
       end
 
       def initialize
         @running = true
-        setup_signal_handlers
         @config = MicroAgent.config
         validate_config
         setup_components
       end
 
-      def start
+      def start(options = {})
+        if options[:create]
+          CreationWorkflow.new.start
+          return
+        end
+
         Display.welcome_message(@config)
 
         while @running
           begin
-            input = Readline.readline("micro-agent> ", true)
+            input = Reline.readmultiline("micro-agent> ") do |line|
+              # Return true if the input is complete
+              line.strip.empty? || line.strip.end_with?("\\")
+            end
+
+            if input.nil?  # Handles Ctrl+D
+              stop
+              break
+            end
+
+            input = input.strip
+            next if input.empty?
             @command_handler.handle_input(input)
-          rescue Interrupt
-            puts "\nTo exit, type 'exit' or press Ctrl+C again"
+          rescue Interrupt  # Handles Ctrl+C
+            print "\r"  # Clear the current line
+            next  # Continue to next iteration
           rescue => e
             puts "\nError: #{e.message}"
             puts e.backtrace if ENV["DEBUG"]
@@ -40,6 +55,7 @@ module MicroAgent
 
       def stop
         @running = false
+        puts  # Add a newline for clean exit
         Display.goodbye_message
       end
 
@@ -48,13 +64,6 @@ module MicroAgent
       def setup_components
         @planner = MicroAgent::Planner.new(@config)
         @command_handler = CommandHandler.new(self)
-      end
-
-      def setup_signal_handlers
-        Signal.trap("INT") do
-          puts "\nGoodbye! Thanks for using MicroAgent."
-          exit(0)
-        end
       end
 
       def validate_config
@@ -66,8 +75,8 @@ module MicroAgent
       end
     end
 
-    def self.start
-      Runner.start
+    def self.start(options = {})
+      Runner.start(options)
     end
   end
 end

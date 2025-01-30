@@ -81,20 +81,24 @@ module MicroAgent
       def create_and_test_file(file, plan)
         puts "\nCreating tests for #{file["name"]}..."
         test_file = "test/#{File.basename(file["name"], ".*")}_test.rb"
+        puts "---------------- Test File ----------------"
         test_content = @planner.create_test_file(plan, file["name"])
 
-        FileUtils.mkdir_p(File.dirname(test_file))
-        File.write(test_file, test_content)
+        puts test_content
+        # FileUtils.mkdir_p(File.dirname(test_file))
+        # File.write(test_file, test_content)
         puts "Created test file: #{test_file}"
 
         puts "\nCreating implementation..."
         implementation = @planner.create_implementation(test_content, plan, file["name"])
+        puts "------------- Implementation --------------"
+        puts implementation
 
-        FileUtils.mkdir_p(File.dirname(file["name"]))
-        File.write(file["name"], implementation)
+        # FileUtils.mkdir_p(File.dirname(file["name"]))
+        # File.write(file["name"], implementation)
         puts "Created implementation: #{file["name"]}"
 
-        @test_runner.run_tests(test_file, implementation, @planner)
+        # @test_runner.run_tests(test_file, implementation, @planner)
       end
     end
   end

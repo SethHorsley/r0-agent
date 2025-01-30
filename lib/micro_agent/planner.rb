@@ -44,8 +44,11 @@ module MicroAgent
         Focus on the file: #{filename}
         Include edge cases and multiple test scenarios.
         Use proper Minitest syntax and best practices.
+        Return ONLY the Ruby code without any markdown or explanations.
       PROMPT
 
+      puts "---------------- test file prompt ----------------"
+      puts prompt
       @large_model.complete(prompt)
     end
 
@@ -59,8 +62,11 @@ module MicroAgent
 
         For the file: #{filename}
         Ensure the implementation follows Ruby best practices and passes all test cases.
+        Return ONLY the Ruby code without any markdown or explanations.
       PROMPT
 
+      puts "---------------- implementation prompt ----------------"
+      puts prompt
       @small_model.complete(prompt)
     end
 
@@ -76,8 +82,11 @@ module MicroAgent
         #{errors}
 
         Please provide a revised implementation that passes all tests.
+        Return ONLY the Ruby code without any markdown or explanations.
       PROMPT
 
+      puts "---------------- revise implementation prompt ----------------"
+      puts prompt
       @small_model.complete(prompt)
     end
   end

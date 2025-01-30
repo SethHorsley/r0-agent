@@ -5,8 +5,8 @@ module MicroAgent
       class << self
         def welcome_message(config)
           puts "Welcome to MicroAgent! Type 'exit' to quit or 'help' for commands."
-          puts "Using #{config["large_provider"]["provider"]} (#{config["large_provider"]["model"]}) for large tasks"
-          puts "Using #{config["small_provider"]["provider"]} (#{config["small_provider"]["model"]}) for small tasks"
+          # puts "Using #{config["large_provider"]["provider"]} (#{config["large_provider"]["model"]}) for large tasks"
+          # puts "Using #{config["small_provider"]["provider"]} (#{config["small_provider"]["model"]}) for small tasks"
         end
 
         def goodbye_message

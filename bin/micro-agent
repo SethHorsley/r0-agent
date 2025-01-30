@@ -1,4 +1,24 @@
 #!/usr/bin/env ruby
 
+require "optparse"
 require_relative "../lib/micro_agent"
-MicroAgent::CLI.start
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: micro-agent [options]"
+
+  opts.on("-c", "--create", "Start creation workflow") do
+    options[:create] = true
+  end
+
+  opts.on("-h", "--help", "Show this help message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+if options[:create]
+  MicroAgent::CLI::CreationWorkflow.new.start
+else
+  MicroAgent::CLI.start
+end
