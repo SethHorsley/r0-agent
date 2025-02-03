@@ -29,12 +29,10 @@ module MicroAgent
         end
 
         Display.welcome_message(@config)
-        puts "Type your prompt or '/help' for available commands."
-        puts "Press Ctrl+D to exit or Ctrl+C to clear current input."
 
         while @running
           begin
-            input = Reline.readline("prompt> ", true)
+            input = Reline.readline(Display.prompt_text, true)
 
             if input.nil?  # Handles Ctrl+D
               stop
@@ -48,7 +46,7 @@ module MicroAgent
             print "\r"  # Clear the current line
             next
           rescue => e
-            puts "\nError: #{e.message}"
+            puts "\n\e[31mError:\e[0m #{e.message}"
             puts e.backtrace if ENV["DEBUG"]
           end
         end

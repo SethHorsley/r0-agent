@@ -103,6 +103,7 @@ module MicroAgent
           llm: llm,
           instructions: "You are a helpful AI assistant."
         ) do |response_chunk|
+          binding.pry
           print response_chunk
           $stdout.flush
         end
