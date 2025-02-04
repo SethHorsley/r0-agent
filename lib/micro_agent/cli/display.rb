@@ -3,7 +3,6 @@ module MicroAgent
     class Display
       class << self
         def welcome_message(config)
-          puts "\e[H\e[2J"  # Clear the screen
           puts "\e[32m# MicroAgent CLI v#{MicroAgent::VERSION}\e[0m"
           puts "# Using \e[36m#{config["large_provider"]["provider"]}\e[0m (\e[36m#{config["large_provider"]["model"]}\e[0m)"
           puts "# Type \e[33m/help\e[0m for available commands"

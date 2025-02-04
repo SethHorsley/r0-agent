@@ -204,7 +204,8 @@ module MicroAgent
 
       def handle_analysis_workflow
         puts "\nWhat would you like to analyze or modify in the codebase?"
-        prompt = gets.chomp
+        prompt = Reline.readline("analyze> ", true) # true enables history for this prompt
+        return if prompt.nil? || prompt.strip.empty?
         analyze_and_process(prompt)
       end
 
