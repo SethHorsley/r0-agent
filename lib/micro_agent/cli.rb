@@ -20,6 +20,7 @@ module MicroAgent
         @config = MicroAgent.config
         validate_config
         setup_components
+        setup_line_editor
       end
 
       def start(options = {})
@@ -48,6 +49,30 @@ module MicroAgent
           rescue => e
             puts "\n\e[31mError:\e[0m #{e.message}"
             puts e.backtrace if ENV["DEBUG"]
+          end
+        end
+      end
+
+      def setup_line_editor
+        Reline.completion_proc = proc { |word|
+          # Add command completion for / commands
+          CommandHandler::COMMANDS.keys.grep(/^#{Regexp.escape(word)}/)
+        }
+
+        # Set up persistent history
+        history_file = File.expand_path("~/.micro_agent_history")
+        if File.exist?(history_file)
+          File.readlines(history_file).each do |line|
+            Reline::HISTORY << line.chomp
+          end
+        end
+
+        # Save history on exit
+        at_exit do
+          File.open(history_file, "w") do |f|
+            Reline::HISTORY.each do |line|
+              f.puts line
+            end
           end
         end
       end
