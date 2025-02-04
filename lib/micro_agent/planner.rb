@@ -56,24 +56,6 @@ module MicroAgent
       @large_model.complete(prompt)
     end
 
-    def create_implementation(test_content, plan, filename)
-      prompt = <<~PROMPT
-        Create a Ruby implementation that passes the following tests:
-        #{test_content}
-
-        Following this plan:
-        #{plan.to_json}
-
-        For the file: #{filename}
-        Ensure the implementation follows Ruby best practices and passes all test cases.
-        Return ONLY the Ruby code without any markdown or explanations.
-      PROMPT
-
-      puts "---------------- implementation prompt ----------------"
-      puts prompt
-      @small_model.complete(prompt)
-    end
-
     def revise_implementation(test_content, current_implementation, errors)
       prompt = <<~PROMPT
         The following implementation failed these tests:

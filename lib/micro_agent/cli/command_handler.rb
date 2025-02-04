@@ -187,18 +187,77 @@ module MicroAgent
         relevant_files.each { |f| puts "- #{f}" }
 
         puts "\nAnalyzing files and generating response..."
-        response = MicroAgent::Utils.get_files_content_and_process(relevant_files, prompt)
 
-        puts "\nAnalysis/Changes:"
-        puts "=" * 80
-        puts response
-        puts "=" * 80
+        # Get file contents
+        files_with_contents = relevant_files.map do |file|
+          content = File.read(file)
+          <<~FILE
+            <file path="#{file}">
+            #{content}
+            </file>
+          FILE
+        end.join("\n\n")
 
-        if response.include?("<file path=")
-          print "\nWould you like to apply these changes? (y/n): "
-          if gets.chomp.downcase == "y"
-            apply_changes(response)
+        system_prompt = "You are an AI assistant analyzing code files. Use the provided file contents as context to answer questions or suggest changes."
+
+        user_prompt = <<~PROMPT
+          Here are the relevant files and their contents:
+
+          #{files_with_contents}
+
+          Task/Question: #{prompt}
+
+          If suggesting changes, wrap the modified file content in XML tags like this:
+          <file path="/path/to/file">
+          [modified content]
+          </file>
+        PROMPT
+
+        begin
+          # Use streaming for the analysis response
+          if @llm.is_a?(Langchain::LLM::Anthropic)
+            @llm.chat(
+              system: system_prompt,  # System message as a parameter
+              messages: [
+                {role: "user", content: user_prompt}
+              ],
+              stream: true,
+              max_tokens: 4000
+            ) do |chunk|
+              if chunk.is_a?(String)
+                print chunk
+              elsif chunk.is_a?(Hash) && chunk.dig("delta", "text")
+                print chunk["delta"]["text"]
+              end
+              $stdout.flush
+            end
+          else
+            @llm.chat(
+              messages: [
+                {role: "system", content: system_prompt},
+                {role: "user", content: user_prompt}
+              ]
+            ) do |chunk|
+              print chunk
+              $stdout.flush
+            end
           end
+          puts "\n"
+        rescue => e
+          puts "\n\e[31mError:\e[0m #{e.message}"
+          if e.respond_to?(:response) && e.response
+            puts "\nResponse details:"
+            puts "Status: #{e.response.status}"
+            puts "Body: #{e.response.body}"
+          elsif e.respond_to?(:error)
+            puts "\nError details:"
+            puts e.error.inspect
+          end
+          puts "\nDebug information:" if ENV["DEBUG"]
+          puts "System prompt length: #{system_prompt.length}" if ENV["DEBUG"]
+          puts "User prompt length: #{user_prompt.length}" if ENV["DEBUG"]
+          puts e.backtrace if ENV["DEBUG"]
+          nil
         end
       end
 

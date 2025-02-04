@@ -87,7 +87,8 @@ module MicroAgent
         default_options: {
           model: @model,
           max_retries: MAX_RETRIES,
-          timeout: 30
+          timeout: 30,
+          max_tokens: 4096
         }
       )
     end
