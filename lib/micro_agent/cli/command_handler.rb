@@ -8,6 +8,7 @@ module MicroAgent
         "/create" => "Start a new creation workflow",
         "/chat" => "Toggle chat mode (remembers conversation)",
         "/clear" => "Clear chat history",
+        "/analyze" => "Analyze codebase for a specific task",
         "help" => "Show this help message"
       }.freeze
 
@@ -20,9 +21,9 @@ module MicroAgent
       def handle_input(input)
         return if input.nil?
 
-        command = input.strip.downcase
+        command = input.strip
 
-        case command
+        case command.downcase
         when "/exit", "/quit"
           @cli.stop
         when "/help", "help"
@@ -35,8 +36,14 @@ module MicroAgent
           toggle_chat_mode
         when "/clear"
           clear_chat_history
+        when "/analyze"
+          handle_analysis_workflow
         else
-          handle_llm_prompt(input)
+          if @chat_mode
+            handle_chat_prompt(input)
+          else
+            analyze_and_process(input)
+          end
         end
       end
 
@@ -165,6 +172,93 @@ module MicroAgent
           puts "\n\e[31mError:\e[0m #{e.message}"
           puts e.backtrace if ENV["DEBUG"]
         end
+      end
+
+      def analyze_and_process(prompt)
+        puts "\nAnalyzing codebase for relevant files..."
+        relevant_files = MicroAgent::Utils.find_relevant_files(Dir.pwd, prompt)
+
+        if relevant_files.empty?
+          puts "No relevant files found for the given prompt."
+          return
+        end
+
+        puts "\nFound relevant files:"
+        relevant_files.each { |f| puts "- #{f}" }
+
+        puts "\nAnalyzing files and generating response..."
+        response = MicroAgent::Utils.get_files_content_and_process(relevant_files, prompt)
+
+        puts "\nAnalysis/Changes:"
+        puts "=" * 80
+        puts response
+        puts "=" * 80
+
+        if response.include?("<file path=")
+          print "\nWould you like to apply these changes? (y/n): "
+          if gets.chomp.downcase == "y"
+            apply_changes(response)
+          end
+        end
+      end
+
+      def handle_analysis_workflow
+        puts "\nWhat would you like to analyze or modify in the codebase?"
+        prompt = gets.chomp
+        analyze_and_process(prompt)
+      end
+
+      def apply_changes(response)
+        changes = parse_changes(response)
+        changes.each do |file_path, content|
+          if File.exist?(file_path)
+            puts "\nModifying existing file: #{file_path}"
+            show_diff(file_path, content)
+            print "Apply these changes? (y/n): "
+            next unless gets.chomp.downcase == "y"
+          else
+            puts "\nCreating new file: #{file_path}"
+            print "Create this file? (y/n): "
+            next unless gets.chomp.downcase == "y"
+            FileUtils.mkdir_p(File.dirname(file_path))
+          end
+
+          File.write(file_path, content)
+          puts "Changes applied to #{file_path}"
+        end
+      end
+
+      def parse_changes(response)
+        changes = {}
+        current_file = nil
+        current_content = []
+
+        response.split("\n").each do |line|
+          if line.match?(/<file path="([^"]+)">/)
+            if current_file
+              changes[current_file] = current_content.join("\n")
+              current_content = []
+            end
+            current_file = line.match(/<file path="([^"]+)">/)[1]
+          elsif line.match?(/<\/file>/)
+            if current_file
+              changes[current_file] = current_content.join("\n")
+              current_file = nil
+              current_content = []
+            end
+          elsif current_file
+            current_content << line
+          end
+        end
+
+        changes
+      end
+
+      def show_diff(file_path, new_content)
+        require "diffy"
+        current_content = File.read(file_path)
+        diff = Diffy::Diff.new(current_content, new_content)
+        puts diff.to_s(:color)
       end
 
       def toggle_chat_mode

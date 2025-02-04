@@ -17,6 +17,7 @@ GEM
       faraday-multipart (>= 1)
     baran (0.1.12)
     csv (3.3.2)
+    diffy (3.4.3)
     event_stream_parser (1.0.0)
     faraday (2.12.2)
       faraday-net_http (>= 2.0, < 3.5)
@@ -58,6 +59,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  anthropic
+  diffy
   micro-agent!
   minitest (~> 5.16)
   rake (~> 13.0)
