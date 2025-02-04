@@ -1,57 +1,171 @@
-# MicroAgent
+````markdown
+# MicroAgent 🤖
 
-Look into recoding this in zig or crystal
+**MicroAgent** is a Ruby gem that supercharges your development workflow with AI-powered code generation, testing automation, and intelligent analysis. Let AI handle the boilerplate while you focus on solving big problems! 🚀
 
-TODO: Delete this and the text below, and describe your gem
+![MicroAgent Demo](https://via.placeholder.com/800x400.png?text=MicroAgent+Demo+Animation) <!-- Replace with actual demo gif -->
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/micro_agent`. To experiment with that code, run `bin/console` for an interactive prompt.
+## ✨ Features
 
-## Installation
+- **🧠 AI-Powered Code Generation**  
+  Convert natural language prompts into production-ready Ruby code
+- **🧪 Test-Driven Development**  
+  Auto-generate Minitest specs and ensure code quality
+- **💻 Interactive CLI**  
+  Conversational interface with command history and auto-complete
+- **🔌 Multi-LLM Support**  
+  Choose between OpenAI GPT-4/3.5 and Anthropic Claude models
+- **🔍 Codebase Analysis**  
+  Understand complex codebases and suggest improvements
+- **⚡ Rapid Iteration**  
+  Automatic test execution with AI-powered error recovery
 
-Add this line to your application's Gemfile:
+## 📦 Installation
+
+Add to your project's Gemfile:
 
 ```ruby
-gem 'micro_agent'
+gem 'micro_agent', '~> 0.1'
 ```
+````
 
-After installation, run the generator:
+Then execute:
 
 ```bash
-rails generate micro_agent:install
+bundle install
 ```
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
-Install the gem and add to the application's Gemfile by executing:
+Or install globally:
 
 ```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+gem install micro_agent
 ```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+## ⚙️ Configuration
+
+Set up your API keys interactively:
 
 ```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+micro-agent config
 ```
 
-## Usage
+Follow the prompts to configure:
 
-TODO: Write usage instructions here
+```yaml
+# ~/.config/micro-agent.yml
+providers:
+  anthropic:
+    api_key: "your_api_key"
+  open_ai:
+    api_key: "your_api_key"
+large_provider:
+  provider: "open_ai"
+  model: "gpt-4"
+```
 
-## Development
+## 🚀 Basic Usage
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Start interactive mode:
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```bash
+micro-agent
+```
 
-## Contributing
+Create new components:
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/micro_agent. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/micro_agent/blob/main/CODE_OF_CONDUCT.md).
+```bash
+micro-agent create
+? Describe your task: A Ruby class that handles JWT authentication
+```
 
-## License
+Analyze existing code:
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+```bash
+micro-agent /analyze
+? What would you like to analyze: Improve error handling in UserController
+```
 
-## Code of Conduct
+## 🛠️ Example Workflow
 
-Everyone interacting in the MicroAgent project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/micro_agent/blob/main/CODE_OF_CONDUCT.md).
+1. **Describe Your Task**  
+   `Create a Redis-backed rate limiter for API endpoints`
+
+2. **Generate Implementation**
+
+   ```ruby
+   class RateLimiter
+     def initialize(redis, threshold: 100)
+       @redis = redis
+       @threshold = threshold
+     end
+     # ...
+   end
+   ```
+
+3. **Auto-Generated Tests**
+
+   ```ruby
+   require 'test_helper'
+   class RateLimiterTest < Minitest::Test
+     def test_enforces_threshold
+       redis = MockRedis.new
+       limiter = RateLimiter.new(redis, threshold: 2)
+       assert limiter.check('ip1')
+       assert limiter.check('ip1')
+       refute limiter.check('ip1')
+     end
+   end
+   ```
+
+4. **Iterative Improvement**
+   ```
+   Tests failed: 1 error
+   Retrying with error context...
+   Revised implementation generated
+   All tests passed! ✅
+   ```
+
+## 🤖 Supported Providers
+
+| Provider  | Models               | Best For             |
+| --------- | -------------------- | -------------------- |
+| OpenAI    | GPT-4, GPT-3.5 Turbo | Complex logic        |
+| Anthropic | Claude 2, Claude 3   | Long-form generation |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Submit PR with tests
+
+```bash
+git clone https://github.com/your/micro-agent.git
+bundle install
+rake test
+```
+
+## 📜 License
+
+MIT License - see [LICENSE.txt](LICENSE.txt) for details
+
+## 💬 Support
+
+Found a bug? Have a feature request?  
+[Open an issue](https://github.com/your/micro-agent/issues)
+
+---
+
+Made with ❤️ by AI-powered developers
+
+```
+
+This README features:
+- Clear visual hierarchy with emojis
+- Interactive configuration instructions
+- Concrete code examples
+- Responsive table formatting
+- Clear contribution guidelines
+- Multiple installation options
+- Visual placeholder for demo gif
+- Badges-ready structure (add your CI/CD badges as needed)
+```
