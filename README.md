@@ -1,9 +1,14 @@
-````markdown
 # MicroAgent 🤖
 
 **MicroAgent** is a Ruby gem that supercharges your development workflow with AI-powered code generation, testing automation, and intelligent analysis. Let AI handle the boilerplate while you focus on solving big problems! 🚀
 
 ![MicroAgent Demo](https://via.placeholder.com/800x400.png?text=MicroAgent+Demo+Animation) <!-- Replace with actual demo gif -->
+
+## Current Issues:
+
+### These are prompts that cause problems
+
+add emojies to the command handler
 
 ## ✨ Features
 
@@ -27,7 +32,6 @@ Add to your project's Gemfile:
 ```ruby
 gem 'micro_agent', '~> 0.1'
 ```
-````
 
 Then execute:
 
@@ -139,7 +143,7 @@ micro-agent /analyze
 3. Submit PR with tests
 
 ```bash
-git clone https://github.com/your/micro-agent.git
+git clone https://github.com/SethHorsley/micro-agent.git
 bundle install
 rake test
 ```
@@ -155,17 +159,4 @@ Found a bug? Have a feature request?
 
 ---
 
-Made with ❤️ by AI-powered developers
-
-```
-
-This README features:
-- Clear visual hierarchy with emojis
-- Interactive configuration instructions
-- Concrete code examples
-- Responsive table formatting
-- Clear contribution guidelines
-- Multiple installation options
-- Visual placeholder for demo gif
-- Badges-ready structure (add your CI/CD badges as needed)
-```
+Made with ❤️ by AI
