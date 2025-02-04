@@ -1,3 +1,5 @@
+require "diffy"
+
 module MicroAgent
   module CLI
     class CommandHandler
@@ -37,17 +39,72 @@ module MicroAgent
         when "/clear"
           clear_chat_history
         when "/analyze"
-          handle_analysis_workflow
+          # handle_analysis_workflow
         else
-          if @chat_mode
-            handle_chat_prompt(input)
-          else
-            analyze_and_process(input)
-          end
+          analyze_and_process(input)
         end
       end
 
       private
+
+      def get_files_content_and_response(files, prompt)
+        files_with_contents = files.map do |file|
+          content = File.read(file)
+          <<~FILE
+            <file path="#{file}">
+            #{content}
+            </file>
+          FILE
+        end.join("\n\n")
+
+        system_prompt = "You are an AI assistant analyzing code files. Use the provided file contents as context to answer questions or suggest changes."
+
+        user_prompt = <<~PROMPT
+          Here are the relevant files and their contents:
+
+          #{files_with_contents}
+
+          Task/Question: #{prompt}
+
+          If suggesting changes, wrap the modified file content in XML tags like this:
+          <file path="/path/to/file">
+          [modified content]
+          </file>
+        PROMPT
+
+        begin
+          response = if @llm.is_a?(Langchain::LLM::Anthropic)
+            @llm.chat(
+              system: system_prompt,
+              messages: [{role: "user", content: user_prompt}],
+              stream: true,
+              max_tokens: 4000
+            ) do |chunk|
+              if chunk.is_a?(String)
+                print chunk
+              elsif chunk.is_a?(Hash) && chunk.dig("delta", "text")
+                print chunk["delta"]["text"]
+              end
+              $stdout.flush
+            end
+          else
+            @llm.chat(
+              messages: [
+                {role: "system", content: system_prompt},
+                {role: "user", content: user_prompt}
+              ]
+            ) do |chunk|
+              print chunk
+              $stdout.flush
+            end
+          end
+          puts "\n"
+          response.completion
+        rescue => e
+          puts "\n\e[31mError:\e[0m #{e.message}"
+          nil
+        end
+      end
 
       def setup_llm
         config = MicroAgent.config
@@ -102,53 +159,53 @@ module MicroAgent
         puts e.backtrace if ENV["DEBUG"]
       end
 
-      def handle_chat_prompt(prompt)
-        @messages << {role: "user", content: prompt}
-
-        puts "\nThinking..."
-        begin
-          response = if @llm.is_a?(Langchain::LLM::Anthropic)
-            @llm.chat(
-              messages: @messages,
-              stream: true
-            ) do |chunk|
-              # Parse and handle the streaming response
-              if chunk.is_a?(String)
-                print chunk
-              elsif chunk.is_a?(Hash)
-                case chunk["type"]
-                when "content_block_delta"
-                  if chunk.dig("delta", "text")
-                    print chunk["delta"]["text"]
-                  end
-                when "message_delta", "message_start", "message_stop",
-                     "content_block_start", "content_block_stop", "ping"
-                  # Ignore these control messages
-                else
-                  # For debugging unknown message types
-                  puts "\nUnknown chunk type: #{chunk["type"]}" if ENV["DEBUG"]
-                end
-              end
-              $stdout.flush
-            end
-          else
-            @llm.chat(messages: @messages) do |chunk|
-              print chunk
-              $stdout.flush
-            end
-          end
-
-          @messages << {
-            role: "assistant",
-            content: response.chat_completion
-          }
-          puts "\n"
-        rescue => e
-          puts "\n\e[31mError:\e[0m #{e.message}"
-          puts "Response: #{response.inspect}" if ENV["DEBUG"]
-          puts e.backtrace if ENV["DEBUG"]
-        end
-      end
+      # def handle_chat_prompt(prompt)
+      #   @messages << {role: "user", content: prompt}
+      #
+      #   puts "\nThinking..."
+      #   begin
+      #     response = if @llm.is_a?(Langchain::LLM::Anthropic)
+      #       @llm.chat(
+      #         messages: @messages,
+      #         stream: true
+      #       ) do |chunk|
+      #         # Parse and handle the streaming response
+      #         if chunk.is_a?(String)
+      #           print chunk
+      #         elsif chunk.is_a?(Hash)
+      #           case chunk["type"]
+      #           when "content_block_delta"
+      #             if chunk.dig("delta", "text")
+      #               print chunk["delta"]["text"]
+      #             end
+      #           when "message_delta", "message_start", "message_stop",
+      #                "content_block_start", "content_block_stop", "ping"
+      #             # Ignore these control messages
+      #           else
+      #             # For debugging unknown message types
+      #             puts "\nUnknown chunk type: #{chunk["type"]}" if ENV["DEBUG"]
+      #           end
+      #         end
+      #         $stdout.flush
+      #       end
+      #     else
+      #       @llm.chat(messages: @messages) do |chunk|
+      #         print chunk
+      #         $stdout.flush
+      #       end
+      #     end
+      #
+      #     @messages << {
+      #       role: "assistant",
+      #       content: response.chat_completion
+      #     }
+      #     puts "\n"
+      #   rescue => e
+      #     puts "\n\e[31mError:\e[0m #{e.message}"
+      #     puts "Response: #{response.inspect}" if ENV["DEBUG"]
+      #     puts e.backtrace if ENV["DEBUG"]
+      #   end
+      # end
 
       def handle_completion_prompt(prompt)
         puts "\nThinking..."
@@ -188,8 +245,10 @@ module MicroAgent
 
         puts "\nAnalyzing files and generating response..."
 
-        # Get file contents
-        files_with_contents = relevant_files.map do |file|
+        # Get file contents and response from LLM
+        complete_response = ""  # Add this to capture full response
+
+        files_with_contents = relevant_files.map do |file|  # Changed 'files' to 'relevant_files'
           content = File.read(file)
           <<~FILE
             <file path="#{file}">
@@ -214,20 +273,19 @@ module MicroAgent
         PROMPT
 
         begin
-          # Use streaming for the analysis response
           if @llm.is_a?(Langchain::LLM::Anthropic)
             @llm.chat(
-              system: system_prompt,  # System message as a parameter
-              messages: [
-                {role: "user", content: user_prompt}
-              ],
+              system: system_prompt,
+              messages: [{role: "user", content: user_prompt}],
               stream: true,
               max_tokens: 4000
             ) do |chunk|
               if chunk.is_a?(String)
                 print chunk
+                complete_response += chunk
               elsif chunk.is_a?(Hash) && chunk.dig("delta", "text")
                 print chunk["delta"]["text"]
+                complete_response += chunk["delta"]["text"]
               end
               $stdout.flush
             end
@@ -239,52 +297,58 @@ module MicroAgent
               ]
             ) do |chunk|
               print chunk
+              complete_response += chunk.to_s
               $stdout.flush
             end
           end
           puts "\n"
+
+          # Debug output
+          puts "\nChecking for file changes in response..."
+          puts "Response contains file tags: #{complete_response.match?(/<file path="[^"]+">/)}"
+
+          if complete_response.match?(/<file path="[^"]+">/)
+            print "\nChanges suggested. Would you like to review them? (y/n): "
+            if gets.chomp.downcase == "y"
+              apply_changes(complete_response)
+            else
+              puts "Changes not applied."
+            end
+          else
+            puts "\nNo file changes detected in response."
+            puts complete_response
+          end
         rescue => e
           puts "\n\e[31mError:\e[0m #{e.message}"
-          if e.respond_to?(:response) && e.response
-            puts "\nResponse details:"
-            puts "Status: #{e.response.status}"
-            puts "Body: #{e.response.body}"
-          elsif e.respond_to?(:error)
-            puts "\nError details:"
-            puts e.error.inspect
-          end
-          puts "\nDebug information:" if ENV["DEBUG"]
-          puts "System prompt length: #{system_prompt.length}" if ENV["DEBUG"]
-          puts "User prompt length: #{user_prompt.length}" if ENV["DEBUG"]
-          puts e.backtrace if ENV["DEBUG"]
           nil
         end
       end
 
-      def handle_analysis_workflow
-        puts "\nWhat would you like to analyze or modify in the codebase?"
-        prompt = Reline.readline("analyze> ", true) # true enables history for this prompt
-        return if prompt.nil? || prompt.strip.empty?
-        analyze_and_process(prompt)
-      end
-
       def apply_changes(response)
         changes = parse_changes(response)
-        changes.each do |file_path, content|
+        changes.each do |file_path, new_content|
           if File.exist?(file_path)
             puts "\nModifying existing file: #{file_path}"
-            show_diff(file_path, content)
-            print "Apply these changes? (y/n): "
+            # Show colored diff
+            current_content = File.read(file_path)
+            diff = Diffy::Diff.new(current_content, new_content)
+            puts "\nProposed changes:"
+            puts diff.to_s(:color)
+
+            print "\nApply these changes? (y/n): "
             next unless gets.chomp.downcase == "y"
           else
             puts "\nCreating new file: #{file_path}"
-            print "Create this file? (y/n): "
+            puts "\nContent:"
+            puts new_content.lines.map { |line| "\e[32m+ #{line}\e[0m" }.join
+
+            print "\nCreate this file? (y/n): "
             next unless gets.chomp.downcase == "y"
             FileUtils.mkdir_p(File.dirname(file_path))
           end
 
-          File.write(file_path, content)
-          puts "Changes applied to #{file_path}"
+          File.write(file_path, new_content)
+          puts "\e[32m✓\e[0m Changes applied to #{file_path}"
         end
       end
 
